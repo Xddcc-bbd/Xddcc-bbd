@@ -1,5 +1,5 @@
 - 👋 Hi, I’m @Xddcc-bbd
-- 👀 I’m interested in creating funny little projects.
+- 👀 快来关注驻波.
 - 🌱 I’m currently learning software engineering.
 - 💞️ I’m looking to collaborate on interesting people who loves codeing & creating funny things.
 - 📫 How to reach me 📧1437108813@qq.com or 20236666@neu.edu.cn
