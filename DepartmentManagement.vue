@@ -2,7 +2,7 @@
   <div class="department-management">
     <!-- 头部区域 -->
     <div class="header">
-      <h1>部门管理系统</h1>
+      <h1>组织管理系统</h1>
       <div class="user-info">
         <el-avatar>{{ user.name.charAt(0) }}</el-avatar>
         <div>
@@ -32,15 +32,17 @@
     </el-card>
 
     <!-- 操作按钮 -->
-    <div class="action-bar">
-      <el-button type="primary" @click="handleAdd">
-        <el-icon><plus /></el-icon> 新增部门
-      </el-button>
-      <div class="stats">
-        <el-tag type="success">正常: {{ stats.active }}</el-tag>
-        <el-tag type="danger">停用: {{ stats.inactive }}</el-tag>
-      </div>
-    </div>
+<div class="action-bar">
+  <div>
+    <el-button type="primary" @click="handleAdd">
+      <el-icon><plus /></el-icon> 新增部门
+    </el-button>
+    <el-button @click="toggleExpandAll" style="margin-left: 10px;">
+      {{ isAllExpanded ? '折叠全部' : '展开全部' }}
+    </el-button>
+  </div>
+
+</div>
 
     <!-- 部门表格 -->
     <el-table
@@ -49,35 +51,25 @@
       :tree-props="{ children: 'children' }"
       v-loading="loading"
       border
+      ref="deptTableRef"
     >
-      <el-table-column prop="deptName" label="部门名称" min-width="100" />
-	  <el-table-column prop="sort" label="排序" width="100" />
-	  <el-table-column prop="createTime" label="创建时间" width="120" />
-      <el-table-column prop="manager" label="负责人" width="120"/>
-      <el-table-column prop="status" label="状态" width="100">
-        <template #default="{ row }">
-          <el-tag :type="row.status === 0 ? 'success' : 'danger'">
-            {{ row.status === 0 ? '正常' : '停用' }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="180" fixed="right">
-        <template #default="{ row }">
-          <el-button size="small" @click="handleEdit(row)">修改</el-button>
-          <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
-        </template>
-      </el-table-column>
+<el-table-column prop="deptName" label="部门名称" width="300" />
+  <el-table-column prop="sort" label="排序" width="300" />
+  <el-table-column prop="status" label="状态" width="300">
+    <template #default="{ row }">
+      <el-tag :type="row.status === 0 ? 'success' : 'danger'">
+        {{ row.status === 0 ? '正常' : '停用' }}
+      </el-tag>
+    </template>
+  </el-table-column>
+  <el-table-column prop="createTime" label="创建时间" min-width="500" />
+  <el-table-column label="操作" width="500" fixed="right">
+    <template #default="{ row }">
+      <el-button size="small" @click="handleEdit(row)">修改</el-button>
+      <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
+    </template>
+  </el-table-column>
     </el-table>
-
-    <!-- 分页 -->
-    <el-pagination
-      v-model:current-page="pagination.current"
-      v-model:page-size="pagination.size"
-      :total="pagination.total"
-      layout="total, sizes, prev, pager, next"
-      @size-change="loadData"
-      @current-change="loadData"
-    />
 
     <!-- 新增/编辑弹窗 -->
     <el-dialog 
@@ -162,8 +154,8 @@
           <el-col :span="12">
             <el-form-item label="部门状态" prop="status">
               <el-radio-group v-model="form.status">
-                <el-radio :label="0">正常</el-radio>
-                <el-radio :label="1">停用</el-radio>
+                <el-radio :value="0">正常</el-radio>
+                <el-radio :value="1">停用</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -200,13 +192,6 @@ const user = reactive({
 const searchForm = reactive({
   deptName: '',
   status: ''
-})
-
-// 分页配置
-const pagination = reactive({
-  current: 1,
-  size: 10,
-  total: 0
 })
 
 // 表格数据
@@ -254,20 +239,57 @@ const stats = computed(() => {
   return { active, inactive, total: active + inactive }
 })
 
+// 新增：表格ref和展开/折叠全部功能
+const deptTableRef = ref(null)
+const isAllExpanded = ref(false)
+
+const toggleExpandAll = () => {
+  if (!deptTableRef.value) return
+  isAllExpanded.value = !isAllExpanded.value
+  expandOrCollapseAll(tableData.value, isAllExpanded.value)
+}
+
+function expandOrCollapseAll(data, expand) {
+  data.forEach(row => {
+    deptTableRef.value.toggleRowExpansion(row, expand)
+    if (row.children && row.children.length > 0) {
+      expandOrCollapseAll(row.children, expand)
+    }
+  })
+}
+
 // 加载部门数据
 const loadData = async () => {
   loading.value = true
   try {
     const params = {
-      deptName: searchForm.deptName,
-      status: searchForm.status, // 注意：Mapper中需要添加status条件
-      parentId: null, // 可根据需要添加
-      manager: null  // 可根据需要添加
+      deptName: searchForm.deptName
+    }
+    if (searchForm.status !== '' && searchForm.status !== null && searchForm.status !== undefined) {
+      params.status = searchForm.status
     }
     const response = await axios.get(`${API_BASE_URL}/search-dept`, { params })
-    tableData.value = response.data
+    const flatData = response.data
+
+    // 搜索时平铺，不搜索时树形
+    if (searchForm.deptName) {
+      tableData.value = flatData
+    } else {
+      const rootDept = flatData.find(item => item.deptName === '测盟会')
+      const buildTree = (parentId) => {
+        return flatData
+          .filter(item => item.parentId === parentId)
+          .map(item => ({
+            ...item,
+            children: buildTree(item.id)
+          }))
+      }
+      tableData.value = rootDept ? [{
+        ...rootDept,
+        children: buildTree(rootDept.id)
+      }] : []
+    }
     buildDepartmentTree()
-    pagination.total = tableData.value.length
   } catch (error) {
     ElMessage.error(error.response?.data?.message || '查询失败')
   } finally {
@@ -311,7 +333,7 @@ const handleAdd = () => {
   dialog.visible = true
   Object.assign(form, {
     id: null,
-    parentId: null,
+    parentId: 1,
     deptName: '',
     manager: '',
     phone: '',
@@ -412,10 +434,6 @@ onMounted(() => {
 .stats {
   display: flex;
   gap: 10px;
-}
-.el-pagination {
-  margin-top: 20px;
-  justify-content: flex-end;
 }
 .tree-select {
   width: 100%;

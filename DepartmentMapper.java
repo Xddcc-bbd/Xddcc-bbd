@@ -38,12 +38,10 @@ public interface DepartmentMapper {
     // 搜索部门
     @Select("<script>" +
             "SELECT * FROM sys_department WHERE 1=1 " +
-            "<if test='parentId != null'> AND parentId = #{parentId}</if>" +
             "<if test='deptName != null and deptName != \"\"'> AND deptName LIKE CONCAT('%', #{deptName}, '%')</if>" +
-            "<if test='manager != null and manager != \"\"'> AND manager LIKE CONCAT('%', #{manager}, '%')</if>" +
+            "<if test='status != null'> AND status = #{status}</if>" +
             "</script>")
     List<Department> searchDepartments(
-            @Param("parentId") Long parentId,
             @Param("deptName") String deptName,
-            @Param("manager") String manager);
+            @Param("status") Integer status);
 }

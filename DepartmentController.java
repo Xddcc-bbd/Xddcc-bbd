@@ -46,12 +46,13 @@ public class DepartmentController {
         return departmentMapper.deleteDepartment(id);
     }
 
-    // 搜索部门 (保持与BookController相同的风格)
+
+    // 搜索部门
     @RequestMapping("/search-dept")
     public List<Department> searchDepartments(
-            @RequestParam(required = false) Long parentId,
             @RequestParam(required = false) String deptName,
-            @RequestParam(required = false) String manager) {
-        return departmentMapper.searchDepartments(parentId, deptName, manager);
+            @RequestParam(required = false) Integer status) {
+        System.out.println("deptName=" + deptName + ", status=" + status);
+        return departmentMapper.searchDepartments(deptName, status);
     }
 }
