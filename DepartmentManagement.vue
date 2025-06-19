@@ -16,12 +16,12 @@
     <el-card class="search-card">
       <el-form :model="searchForm" inline>
         <el-form-item label="部门名称">
-          <el-input v-model="searchForm.name" clearable placeholder="输入部门名称" />
+          <el-input v-model="searchForm.deptName" clearable placeholder="输入部门名称" />
         </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="searchForm.status" clearable placeholder="全部">
-            <el-option label="正常" value="0" />
-            <el-option label="停用" value="1" />
+            <el-option label="正常" :value="0" />
+            <el-option label="停用" :value="1" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -50,12 +50,14 @@
       v-loading="loading"
       border
     >
-      <el-table-column prop="name" label="部门名称" min-width="200" />
-      <el-table-column prop="manager" label="负责人" width="120" />
+      <el-table-column prop="deptName" label="部门名称" min-width="100" />
+	  <el-table-column prop="sort" label="排序" width="100" />
+	  <el-table-column prop="createTime" label="创建时间" width="120" />
+      <el-table-column prop="manager" label="负责人" width="120"/>
       <el-table-column prop="status" label="状态" width="100">
         <template #default="{ row }">
-          <el-tag :type="row.status === '0' ? 'success' : 'danger'">
-            {{ row.status === '0' ? '正常' : '停用' }}
+          <el-tag :type="row.status === 0 ? 'success' : 'danger'">
+            {{ row.status === 0 ? '正常' : '停用' }}
           </el-tag>
         </template>
       </el-table-column>
@@ -78,103 +80,103 @@
     />
 
     <!-- 新增/编辑弹窗 -->
-<el-dialog 
-    v-model="dialog.visible" 
-    :title="dialog.title" 
-    width="680px"
-    :close-on-click-modal="false"
-  >
-    <el-form 
-      :model="form" 
-      :rules="rules" 
-      ref="formRef" 
-      label-width="100px"
-      label-position="right"
+    <el-dialog 
+      v-model="dialog.visible" 
+      :title="dialog.title" 
+      width="680px"
+      :close-on-click-modal="false"
     >
-      <el-form-item label="上级部门" prop="parentId">
-        <el-tree-select
-          v-model="form.parentId"
-          :data="departmentOptions"
-          :props="treeProps"
-          check-strictly
-          placeholder="选择上级部门"
-          class="tree-select"
-          clearable
-        />
-      </el-form-item>
+      <el-form 
+        :model="form" 
+        :rules="rules" 
+        ref="formRef" 
+        label-width="100px"
+        label-position="right"
+      >
+        <el-form-item label="上级部门" prop="parentId">
+          <el-tree-select
+            v-model="form.parentId"
+            :data="departmentOptions"
+            :props="treeProps"
+            check-strictly
+            placeholder="选择上级部门"
+            class="tree-select"
+            clearable
+          />
+        </el-form-item>
 
-      <el-row :gutter="20">
-        <el-col :span="12">
-          <el-form-item label="部门名称" prop="name">
-            <el-input 
-              v-model="form.name" 
-              placeholder="请输入部门名称" 
-              clearable
-            />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="显示排序" prop="sort">
-            <el-input-number
-              v-model="form.sort"
-              :min="0"
-              :max="999"
-              controls-position="right"
-              placeholder="请输入排序"
-            />
-          </el-form-item>
-        </el-col>
-      </el-row>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="部门名称" prop="deptName">
+              <el-input 
+                v-model="form.deptName" 
+                placeholder="请输入部门名称" 
+                clearable
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="显示排序" prop="sort">
+              <el-input-number
+                v-model="form.sort"
+                :min="0"
+                :max="999"
+                controls-position="right"
+                placeholder="请输入排序"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
 
-      <el-row :gutter="20">
-        <el-col :span="12">
-          <el-form-item label="负责人" prop="manager">
-            <el-input 
-              v-model="form.manager" 
-              placeholder="请输入负责人" 
-              clearable
-            />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="联系电话" prop="phone">
-            <el-input 
-              v-model="form.phone" 
-              placeholder="请输入联系电话" 
-              clearable
-            />
-          </el-form-item>
-        </el-col>
-      </el-row>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="负责人" prop="manager">
+              <el-input 
+                v-model="form.manager" 
+                placeholder="请输入负责人" 
+                clearable
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="联系电话" prop="phone">
+              <el-input 
+                v-model="form.phone" 
+                placeholder="请输入联系电话" 
+                clearable
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
 
-      <el-row :gutter="20">
-        <el-col :span="12">
-          <el-form-item label="邮箱" prop="email">
-            <el-input 
-              v-model="form.email" 
-              placeholder="请输入邮箱" 
-              clearable
-            />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="部门状态" prop="status">
-            <el-radio-group v-model="form.status">
-              <el-radio label="0">正常</el-radio>
-              <el-radio label="1">停用</el-radio>
-            </el-radio-group>
-          </el-form-item>
-        </el-col>
-      </el-row>
-    </el-form>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="邮箱" prop="email">
+              <el-input 
+                v-model="form.email" 
+                placeholder="请输入邮箱" 
+                clearable
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="部门状态" prop="status">
+              <el-radio-group v-model="form.status">
+                <el-radio :label="0">正常</el-radio>
+                <el-radio :label="1">停用</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
 
-    <template #footer>
-      <span class="dialog-footer">
-        <el-button @click="dialog.visible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit">确定</el-button>
-      </span>
-    </template>
-  </el-dialog>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="dialog.visible = false">取消</el-button>
+          <el-button type="primary" @click="handleSubmit">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -182,17 +184,21 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
+import axios from 'axios'
+
+// 配置API基础URL
+const API_BASE_URL = 'http://localhost:8080'
 
 // 用户信息
 const user = reactive({
   name: '管理员',
   role: 'admin',
-  lastLogin: '2025-06-17 19:07'
+  lastLogin: new Date().toLocaleString()
 })
 
 // 搜索表单
 const searchForm = reactive({
-  name: '',
+  deptName: '',
   status: ''
 })
 
@@ -218,53 +224,82 @@ const dialog = reactive({
 const form = reactive({
   id: null,
   parentId: null,
-  name: '',
-  status: '0'
+  deptName: '',
+  manager: '',
+  phone: '',
+  email: '',
+  sort: 0,
+  status: 0
 })
 
 // 表单验证规则
 const rules = {
-  name: [{ required: true, message: '请输入部门名称', trigger: 'blur' }],
-  parentId: [{ required: true, message: '请选择上级部门', trigger: 'change' }]
+  deptName: [{ required: true, message: '请输入部门名称', trigger: 'blur' }],
+  parentId: [{ required: true, message: '请选择上级部门', trigger: 'change' }],
+  sort: [{ required: true, message: '请输入显示排序', trigger: 'blur' }]
 }
 
 // 部门树数据
-const departmentTree = ref([])
+const departmentOptions = ref([])
+const treeProps = {
+  value: 'id',
+  label: 'deptName',
+  children: 'children'
+}
 
 // 统计信息
 const stats = computed(() => {
-  const active = tableData.value.filter(d => d.status === '0').length
-  const inactive = tableData.value.filter(d => d.status === '1').length
+  const active = tableData.value.filter(d => d.status === 0).length
+  const inactive = tableData.value.filter(d => d.status === 1).length
   return { active, inactive, total: active + inactive }
 })
 
-// 加载数据
+// 加载部门数据
 const loadData = async () => {
   loading.value = true
   try {
-    // 这里替换为实际API调用
-    const mockData = [
-      { id: 1, parentId: 0, name: '总部', status: '0' },
-      { id: 2, parentId: 1, name: '技术部', status: '0' }
-    ]
-    tableData.value = mockData
+    const params = {
+      deptName: searchForm.deptName,
+      status: searchForm.status, // 注意：Mapper中需要添加status条件
+      parentId: null, // 可根据需要添加
+      manager: null  // 可根据需要添加
+    }
+    const response = await axios.get(`${API_BASE_URL}/search-dept`, { params })
+    tableData.value = response.data
     buildDepartmentTree()
+    pagination.total = tableData.value.length
+  } catch (error) {
+    ElMessage.error(error.response?.data?.message || '查询失败')
   } finally {
     loading.value = false
   }
 }
 
-// 构建部门树
+// 构建部门树形选项
 const buildDepartmentTree = () => {
-  departmentTree.value = [
-    { id: 0, name: '根部门', children: [] }
+  // 添加根节点
+  departmentOptions.value = [
+    { id: 0, deptName: '根部门', children: [] }
   ]
-  // 实际项目中这里需要递归构建树形结构
+  
+  // 递归构建树形结构
+  const buildTree = (parentId, nodes) => {
+    const children = tableData.value.filter(item => item.parentId === parentId)
+    if (children.length > 0) {
+      nodes.push(...children.map(item => ({
+        ...item,
+        children: buildTree(item.id, [])
+      })))
+    }
+    return nodes
+  }
+  
+  departmentOptions.value[0].children = buildTree(0, [])
 }
 
 // 重置搜索
 const resetSearch = () => {
-  searchForm.name = ''
+  searchForm.deptName = ''
   searchForm.status = ''
   loadData()
 }
@@ -277,8 +312,12 @@ const handleAdd = () => {
   Object.assign(form, {
     id: null,
     parentId: null,
-    name: '',
-    status: '0'
+    deptName: '',
+    manager: '',
+    phone: '',
+    email: '',
+    sort: 0,
+    status: 0
   })
 }
 
@@ -291,23 +330,50 @@ const handleEdit = (row) => {
 }
 
 // 删除部门
-const handleDelete = (row) => {
-  ElMessageBox.confirm(`确定删除 ${row.name} 吗？`, '警告', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
+const handleDelete = async (row) => {
+  try {
+    await ElMessageBox.confirm(`确定删除 ${row.deptName} 吗？`, '警告', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    
+    // 修改为使用/delete-dept接口
+    await axios.get(`${API_BASE_URL}/delete-dept?id=${row.id}`)
     ElMessage.success('删除成功')
     loadData()
-  })
+  } catch (error) {
+    if (error !== 'cancel') {
+      // 直接显示后端返回的错误信息
+      const errorMsg = error.response?.data?.message || 
+                     error.response?.data?.error || 
+                     '删除失败'
+      ElMessage.error(errorMsg)
+    }
+  }
 }
 
 // 提交表单
-const submitForm = () => {
-  // 这里添加实际API调用
-  ElMessage.success(dialog.isEdit ? '修改成功' : '新增成功')
-  dialog.visible = false
-  loadData()
+const handleSubmit = async () => {
+  try {
+    if (dialog.isEdit) {
+      // 修改为使用/update-dept接口
+      await axios.post(`${API_BASE_URL}/update-dept`, form)
+      ElMessage.success('修改成功')
+    } else {
+      // 修改为使用/add-dept接口
+      await axios.post(`${API_BASE_URL}/add-dept`, form)
+      ElMessage.success('新增成功')
+    }
+    dialog.visible = false
+    loadData()
+  } catch (error) {
+    // 直接显示后端返回的错误信息
+    const errorMsg = error.response?.data?.message || 
+                   error.response?.data?.error || 
+                   '操作失败'
+    ElMessage.error(errorMsg)
+  }
 }
 
 // 初始化加载
@@ -350,5 +416,8 @@ onMounted(() => {
 .el-pagination {
   margin-top: 20px;
   justify-content: flex-end;
+}
+.tree-select {
+  width: 100%;
 }
 </style>
